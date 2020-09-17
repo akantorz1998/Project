@@ -6,7 +6,8 @@ import argparse
 import imutils
 import time
 import dlib
-
+import Buzzer
+import RPi.GPIO as GPIO
 
 
 def euclidean_dist(ptA,ptB):
@@ -34,7 +35,8 @@ ap.add_argument("-a", "--alarm", type=int, default=0,
     help="boolean used to indicate if TrafficHat should be used")
 args = vars(ap.parse_args())
 
-
+def alam():
+    exec(open('Buzzer.py').read())
 
 if args["alarm"] > 0:
     th = exec(open('Buzzer.py').read())
@@ -111,7 +113,11 @@ while True:
             # frames, then sound the alarm
             if COUNTER >= EYE_AR_CONSEC_FRAMES:
                 # if the alarm is not on, turn it on
+                if not ALARM_ON:
+                    ALARM_ON = True
 
+                    if args["alarm"] > 0:
+                        alam()
                 # draw an alarm on the frame
                 cv2.putText(frame, "DROWSINESS ALERT!", (10, 30),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
