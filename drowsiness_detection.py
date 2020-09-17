@@ -66,15 +66,29 @@ predictor = dlib.shape_predictor(args["shape_predictor"])
 # start the video stream thread
 print("[INFO] starting video stream thread...")
 #vs = VideoStream(src=0).start()
-vs = VideoStream(usePiCamera=True).start()
+vs = VideoStream(usePiCamera=True,framerate = 30).start()
 time.sleep(1.0)
 # loop over frames from the video stream
+time_start = time.time()
+fps = 0
+t_fps = 0
 while True:
     # grab the frame from the threaded video file stream, resize
     # it, and convert it to grayscale
     # channels)
+    now_time = time.time()
+    if now_time - time_start >= 1:
+        t_fps = fps
+        fps = 0
+        time_start = time.time()
+    
     frame = vs.read()
-    frame = imutils.resize(frame, width=450)
+    fps +=1   
+    frame = imutils.resize(frame, width=320)
+    
+    cv2.putText(frame, "Fps: {:.1f}".format(t_fps), (10, 30),
+            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+    
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     # detect faces in the grayscale frame
     rects = detector.detectMultiScale(gray, scaleFactor=1.1,
