@@ -7,6 +7,7 @@ import imutils
 import time
 
 vs = VideoStream(usePiCamera=True,framerate = 60).start()
+#vs.resolution(720,480)
 time.sleep(1.0)
 time_start = time.time()
 fps = 0
