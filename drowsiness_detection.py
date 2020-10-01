@@ -7,6 +7,7 @@ import imutils
 import time
 import dlib
 import Buzzer
+import threading 
 import RPi.GPIO as GPIO
 
 
@@ -72,6 +73,8 @@ time.sleep(1.0)
 time_start = time.time()
 fps = 0
 t_fps = 0
+
+t1 = threading.Thread(target = alam)
 while True:
     # grab the frame from the threaded video file stream, resize
     # it, and convert it to grayscale
@@ -128,10 +131,13 @@ while True:
             if COUNTER >= EYE_AR_CONSEC_FRAMES:
                 # if the alarm is not on, turn it on
                 if not ALARM_ON:
-                    ALARM_ON = True
+                    #ALARM_ON = True
 
                     if args["alarm"] > 0:
-                        alam()
+                        if not t1.is_alive():
+                            t1 = threading.Thread(target = alam)
+                            t1.start()
+                            #t1.join()#alam()
                 # draw an alarm on the frame
                 cv2.putText(frame, "DROWSINESS ALERT!", (10, 30),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
