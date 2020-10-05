@@ -47,7 +47,7 @@ if args["alarm"] > 0:
 # frames the eye must be below the threshold for to set off the
 # alarm
 EYE_AR_THRESH = 0.3
-EYE_AR_CONSEC_FRAMES = 16
+EYE_AR_CONSEC_FRAMES = 12#16
 # initialize the frame counter as well as a boolean used to
 # indicate if the alarm is going off
 COUNTER = 0
@@ -67,7 +67,7 @@ predictor = dlib.shape_predictor(args["shape_predictor"])
 # start the video stream thread
 print("[INFO] starting video stream thread...")
 #vs = VideoStream(src=0).start()
-vs = VideoStream(usePiCamera=True,framerate = 30).start()
+vs = VideoStream(usePiCamera=True).start()
 time.sleep(1.0)
 # loop over frames from the video stream
 time_start = time.time()
@@ -87,7 +87,7 @@ while True:
     
     frame = vs.read()
     fps +=1   
-    frame = imutils.resize(frame, width=420)
+    frame = imutils.resize(frame, width=720)
     
     cv2.putText(frame, "Fps: {:.1f}".format(t_fps), (10, 30),
             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
@@ -95,7 +95,7 @@ while True:
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     # detect faces in the grayscale frame
     rects = detector.detectMultiScale(gray, scaleFactor=1.1,
-        minNeighbors=8, minSize=(64, 64),
+        minNeighbors=11, minSize=(64, 64),
         flags=cv2.CASCADE_SCALE_IMAGE)
     our_faces = [(0,0,0,0)]
     x_temp = 0
@@ -115,7 +115,7 @@ while True:
          #   our_faces.append((x,y,w,h))
           #  x_temp = x+w
         big_face = our_faces.pop()
-        print(big_face)
+        #print(big_face)
         if w * h >= x_temp: 
             rect = dlib.rectangle(int(x), int(y), int(x + w),
             int(y + h))
@@ -155,7 +155,7 @@ while True:
                                 t1.start()
                                 #t1.join()#alam()
                     # draw an alarm on the frame
-                    cv2.putText(frame, "DROWSINESS ALERT!", (10, 30),
+                    cv2.putText(frame, "DROWSINESS ALERT!", (20, 60),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
             # otherwise, the eye aspect ratio is not below the blink
             # threshold, so reset the counter and alarm
@@ -169,6 +169,7 @@ while True:
                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
 
     # show the frame
+    #frame = imutils.resize(frame, width=720)
     cv2.imshow("Frame", frame)
     key = cv2.waitKey(1) & 0xFF
 
