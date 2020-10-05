@@ -46,8 +46,8 @@ if args["alarm"] > 0:
 # blink and then a second constant for the number of consecutive
 # frames the eye must be below the threshold for to set off the
 # alarm
-EYE_AR_THRESH = 0.3
-EYE_AR_CONSEC_FRAMES = 12#16
+EYE_AR_THRESH = 0.275
+EYE_AR_CONSEC_FRAMES = 16#16
 # initialize the frame counter as well as a boolean used to
 # indicate if the alarm is going off
 COUNTER = 0
@@ -73,7 +73,8 @@ time.sleep(1.0)
 time_start = time.time()
 fps = 0
 t_fps = 0
-
+crop_x = 150
+crop_y = 100
 t1 = threading.Thread(target = alam)
 while True:
     # grab the frame from the threaded video file stream, resize
@@ -86,35 +87,41 @@ while True:
         time_start = time.time()
     
     frame = vs.read()
+    
     fps +=1   
-    frame = imutils.resize(frame, width=720)
+    frame = imutils.resize(frame, width=1080)
     
     cv2.putText(frame, "Fps: {:.1f}".format(t_fps), (10, 30),
-            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
-    
+            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+    cv2.rectangle(frame,(crop_x,crop_y),(1024-crop_x,768-crop_y),(255, 0, 0),1)
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    gray2 = gray[crop_y:-crop_y,crop_x:-crop_x]
+    #print(gray[50:-50,50:-50])
     # detect faces in the grayscale frame
-    rects = detector.detectMultiScale(gray, scaleFactor=1.1,
-        minNeighbors=11, minSize=(64, 64),
+    rects = detector.detectMultiScale(gray2, scaleFactor=1.1,
+        minNeighbors=11, minSize=(80, 80),
         flags=cv2.CASCADE_SCALE_IMAGE)
-    our_faces = [(0,0,0,0)]
+    #our_faces = [(0,0,0,0)]
     x_temp = 0
     for (x, y, w, h) in rects:
         if w * h > x_temp:
             
-            our_faces.append((x, y, w, h))
+            #our_faces.append((x, y, w, h))
             x_temp = w * h 
             #print(x_temp)
     #print(str(our_faces.pop())+"end")
 
     # loop over the face detections
     for (x, y, w, h) in rects:
+        x = x + crop_x
+        y = y + crop_y
         # construct a dlib rectangle object from the Haar cascade
         # bounding box
         #if(x+w > x_temp):
          #   our_faces.append((x,y,w,h))
           #  x_temp = x+w
-        big_face = our_faces.pop()
+        #if len(our_faces):
+         #   big_face = our_faces.pop()
         #print(big_face)
         if w * h >= x_temp: 
             rect = dlib.rectangle(int(x), int(y), int(x + w),
@@ -155,8 +162,8 @@ while True:
                                 t1.start()
                                 #t1.join()#alam()
                     # draw an alarm on the frame
-                    cv2.putText(frame, "DROWSINESS ALERT!", (20, 60),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+                    cv2.putText(frame, "DROWSINESS ALERT!", (385, 30),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 5)
             # otherwise, the eye aspect ratio is not below the blink
             # threshold, so reset the counter and alarm
             else:
@@ -165,11 +172,11 @@ while True:
             # draw the computed eye aspect ratio on the frame to help
             # with debugging and setting the correct eye aspect ratio
             # thresholds and frame counters
-            cv2.putText(frame, "EAR: {:.3f}".format(ear), (300, 30),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+            cv2.putText(frame, "EAR: {:.3f}".format(ear), (880, 30),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
     # show the frame
-    #frame = imutils.resize(frame, width=720)
+    frame = imutils.resize(frame, width=1080)
     cv2.imshow("Frame", frame)
     key = cv2.waitKey(1) & 0xFF
 
