@@ -9,7 +9,12 @@ import dlib
 import Buzzer
 import threading 
 import RPi.GPIO as GPIO
+import requests
+import mysql.connector
+from datetime import datetime
 
+
+time_update = 0
 
 def euclidean_dist(ptA,ptB):
     # compute and return the euclidean distance between the two
@@ -39,6 +44,38 @@ args = vars(ap.parse_args())
 def alam():
     exec(open('Buzzer.py').read())
 
+
+
+url = 'http://161.246.5.138:443/'
+def update_drowsiness(alert):
+    now = datetime.now()
+    drowsiness = {'device_id': 1, 'time': now,'gps_x':0.0,'gps_y':0.0,'alert':alert}
+    t = requests.post(url+"api/update_drowsiness",data = drowsiness)
+    print(t)
+    
+
+
+time_cout_alive = 1
+def time_cout():
+    global time_update
+    time_cout_start = time.time()
+    while time_cout_alive:
+        now_cout = time.time()
+        
+        print(now_cout - time_cout_start)
+        #print(time_update)
+        
+        if now_cout - time_cout_start >=10:
+            time_update = 1
+            time_cout_start = time.time()
+            
+            print("come in")
+            
+        time.sleep(1)
+        
+    
+    
+    
 if args["alarm"] > 0:
     th = exec(open('Buzzer.py').read())
     print("[INFO] alarm...")
@@ -75,11 +112,20 @@ fps = 0
 t_fps = 0
 crop_x = 150
 crop_y = 100
+
+t0 = threading.Thread(target = time_cout)
+t0.start()
 t1 = threading.Thread(target = alam)
 while True:
     # grab the frame from the threaded video file stream, resize
     # it, and convert it to grayscale
     # channels)
+    if time_update == 1:
+        time_update = 0
+        print("work!")
+        #update_drowsiness(0)
+        t3 = threading.Thread(target = update_drowsiness,args =(0, ))
+        t3.start()
     now_time = time.time()
     if now_time - time_start >= 1:
         t_fps = fps
@@ -123,6 +169,7 @@ while True:
         #if len(our_faces):
          #   big_face = our_faces.pop()
         #print(big_face)
+        cv2.rectangle(frame,(x,y),(w+x,h+y),(255, 0, 0),1)
         if w * h >= x_temp: 
             rect = dlib.rectangle(int(x), int(y), int(x + w),
             int(y + h))
@@ -160,6 +207,8 @@ while True:
                             if not t1.is_alive():
                                 t1 = threading.Thread(target = alam)
                                 t1.start()
+                                t2 = threading.Thread(target = update_drowsiness,args =(1, ))
+                                t2.start()
                                 #t1.join()#alam()
                     # draw an alarm on the frame
                     cv2.putText(frame, "DROWSINESS ALERT!", (385, 30),
@@ -176,12 +225,13 @@ while True:
                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
     # show the frame
-    frame = imutils.resize(frame, width=1080)
+    frame = imutils.resize(frame, width=1024)
     cv2.imshow("Frame", frame)
     key = cv2.waitKey(1) & 0xFF
 
     # if the `q` key was pressed, break from the loop
     if key == ord("q"):
+        time_cout_alive = 0
         break
 # do a bit of cleanup
 cv2.destroyAllWindows()
