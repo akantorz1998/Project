@@ -49,8 +49,10 @@ def alam():
 url = 'http://161.246.5.138:443/'
 def update_drowsiness(alert):
     now = datetime.now()
-    drowsiness = {'device_id': 1, 'time': now,'gps_x':0.0,'gps_y':0.0,'alert':alert}
+    dt_str = '{:%d/%m/%Y %H:%M %S}'.format(now)
+    drowsiness = {'device_id': 1, 'time': dt_str,'gps_x':0.0,'gps_y':0.0,'alert':alert}
     t = requests.post(url+"api/update_drowsiness",data = drowsiness)
+    print(type(dt_str))
     print(t)
     
 
@@ -123,7 +125,6 @@ while True:
     if time_update == 1:
         time_update = 0
         print("work!")
-        #update_drowsiness(0)
         t3 = threading.Thread(target = update_drowsiness,args =(0, ))
         t3.start()
     now_time = time.time()
